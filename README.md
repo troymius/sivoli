@@ -5,7 +5,7 @@ sivoli
 
 1. Just a veteran's day weekend project.
 
-2. Need to do 3D vector operations on Python lists again.
+2. 3D 
 
 3. Numpy, scipy... can it be done without them.
 
