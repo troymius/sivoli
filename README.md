@@ -1,5 +1,5 @@
 
-sivoli
+# sivoli
 
 0. SImple Vector Operations for (pure) Python LIsts.
 
@@ -12,6 +12,8 @@ sivoli
 4. Mostly for positioning stuff in space.
 
 5. Work in progress, snail speed, use at your own risk.
+
+![alt text](sivoli-blender-quat.png)
 
 
 
