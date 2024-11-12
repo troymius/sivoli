@@ -11,7 +11,7 @@ sivoli
 
 4. Mostly for positioning stuff in space.
 
-5. Use at your own risk, work in progress, snail speed.
+5. Work in progress, snail speed, use at your own risk.
 
 
 
