@@ -16,8 +16,8 @@ import sys
 # unit(a)
 # tolength(a, size)
 # angle(a,b)
-# rotate(v, r, alpha)
-# orivecs2quat(a,b)
+# rot(v, r, alpha)
+# vecs2quat(a,b)
 #
 #
 #
@@ -195,7 +195,7 @@ def angle(a,b, *args):
 #______________________________________________________
 # convert orientation given by 2 perpendicular vectors to a quaternion
 
-def orivecs2quat(a,b,c):
+def vecs2quat(a,b,c):
 
     ux = [1,0,0]
     uy = [0,1,0]

@@ -8,7 +8,7 @@ import random
 
 for i in range(0,1):
 
-    print(" quaternion test # ", i)
+    print(" sivoli to Blender quaternion test ", i)
       
     # generate a random vector
     v = vo.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
@@ -35,7 +35,7 @@ for i in range(0,1):
 
     # print("urx, ury: ", urx, ury)
 
-    quaternion_out = vo.orivecs2quat(urx,ury,urz)
+    quaternion_out = vo.vecs2quat(urx,ury,urz)
     print("quaternion_out =", quaternion_out)
 
     for x, y in zip(quaternion_in, quaternion_out):
@@ -69,7 +69,7 @@ for i in range(0,1):
 
 
 
-print(" ==== quaternion to blender test # ")
+print(" ==== sivoli to blender quaternion test: ")
 
 # create 2 perpendicular vectors
 ux = [ 0.446186    ,    1.62461     ,  -1.07776    ]
@@ -78,7 +78,7 @@ uy = vo.cross(uz,ux)
 
 # print("urx, ury: ", urx, ury)
 
-quaternion_out = vo.orivecs2quat(ux,uy,uz)
+quaternion_out = vo.vecs2quat(ux,uy,uz)
 print("quaternion =", quaternion_out)
 
 
