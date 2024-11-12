@@ -13,7 +13,7 @@
 
 - Work in progress, snail speed, use at your own risk.
 
-![alt text](sivoli-blender-quat.png)
+![alt text](quat.png)
 
 
 
