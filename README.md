@@ -11,7 +11,9 @@ sivoli
 
 4. Mostly for positioning stuff in space.
 
-5. Use at your own risk, this is caveman coding.
+5. Use at your own risk, work in progress, snail speed.
+
+
 
 
 
