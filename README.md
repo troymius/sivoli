@@ -1,7 +1,7 @@
 
 # sivoli
 
-0. *SI*mple *V*ector *O*perations for (pure) python *LI*sts.
+0. **SI**mple **V**ector **O**perations for (pure) python **LI**sts.
 
 1. Just a veteran's day weekend project.
 
