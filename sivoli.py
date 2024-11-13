@@ -160,12 +160,12 @@ def rot(v, r, alpha):
 
     # project v onto r
     size_v_proj_r = dot(v, unit(r))
-    #print("size_v_proj_r=",size_v_proj_r)
+
     rscaled = scale(unit(r), size_v_proj_r)
-    #print("rscaled=",rscaled)
+
     # radius_vec goes from rscaled to v
     radius_vec = subtract(v, rscaled)
-    #print("radius_vec=",radius_vec)
+
 
     # rotate by incremens beta
     beta = alpha / 4
@@ -177,10 +177,10 @@ def rot(v, r, alpha):
         # such that tan(beta)=|t|/|radius_vec|
         # do not use rscaled here as it could be a zero vector
         t = tolength( cross(unit(r), unit(radius_vec))  , math.tan(beta) )
-        #print("t=",t)
+
         new_radius_vec = tolength(add(unit(radius_vec), t), length(radius_vec) )
         radius_vec = new_radius_vec
-        #print("radius_vec=",radius_vec)
+
 
     return(add(radius_vec, rscaled))
 
@@ -237,7 +237,7 @@ def vecs2quat(a,b,c):
 
     # check that a is perpendicular to b
     perpend_check = math.degrees(math.acos(dot(a,b)))
-    # print(" perpend_check (should be close to 90): ", perpend_check)
+
 
     # make things perfectly rectangular by replacing the original b with a new b
     c = cross(a,b)
@@ -261,7 +261,7 @@ def vecs2quat(a,b,c):
     d_lengths = [length(dx),length(dy),length(dz)]
 
     if max(d_lengths) < 1E-6:
-       # print(" Rotated system practically coincides with reference coordinate system. ") 
+       logging.info(" Rotated system practically coincides with reference coordinate system. ") 
        return([0,1,0.0])
     
     # find the shortest d
