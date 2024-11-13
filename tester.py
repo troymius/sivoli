@@ -6,9 +6,12 @@ import random
 #___________________________________________________
 #  quaternion calculation test 
 
-for i in range(0,1):
+print(" ============== quaternion calculation  test 1:") 
 
-    print(" sivoli to Blender quaternion test ", i)
+
+for i in range(0,10):
+
+    print(" i = ", i)
       
     # generate a random vector
     v = vo.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
@@ -22,7 +25,7 @@ for i in range(0,1):
     qy = vu[1]*math.sin(alpha/2)
     qz = vu[2]*math.sin(alpha/2)
     quaternion_in = [ q, qx, qy, qz ]
-    print("quaternion_in =", quaternion_in)
+    print(" quaternion_in =", quaternion_in)
 
     # create 2 perpendicular vectors
     ux = [  444.9  ,    0      ,   0]
@@ -36,30 +39,21 @@ for i in range(0,1):
     # print("urx, ury: ", urx, ury)
 
     quaternion_out = vo.vecs2quat(urx,ury,urz)
-    print("quaternion_out =", quaternion_out)
+    print(" quaternion_out =", quaternion_out)
 
     for x, y in zip(quaternion_in, quaternion_out):
         try:
            if abs(abs(x)-abs(y)) > 1E-8 :
                 print(" === NOK quaternion test: in and out quaternions don't agree")
-                print("quternion_in  = ", quaternion_in)
-                print("quternion_out = ", quaternion_out) 
+                print(" quternion_in  = ", quaternion_in)
+                print(" quternion_out = ", quaternion_out) 
                 exit
 
         except:
             print(" === NOK quaternion test: exception ")
-            print("quternion_in  = ", quaternion_in)
-            print("quternion_out = ", quaternion_out) 
+            print( "quternion_in  = ", quaternion_in)
+            print(" quternion_out = ", quaternion_out) 
             exit
-
-
-
-
-
-
-
-
-
 
 
 
@@ -67,9 +61,7 @@ for i in range(0,1):
 #___________________________________________________
 #  quaternion calculation test 
 
-
-
-print(" ==== sivoli to blender quaternion test: ")
+print(" ============== quaternion calculation test 2:") 
 
 # create 2 perpendicular vectors
 ux = [ 0.446186    ,    1.62461     ,  -1.07776    ]
@@ -79,26 +71,51 @@ uy = vo.cross(uz,ux)
 # print("urx, ury: ", urx, ury)
 
 quaternion_out = vo.vecs2quat(ux,uy,uz)
-print("quaternion =", quaternion_out)
+print(" quaternion = ", quaternion_out)
 
 
 
 
 
-        
+#___________________________________________________
+#  vector rotation test    
 
-# a = [-1,1,0]
-# r = [1.0  ,  0.0,  0.0]
+print(" ============== vector rotate test:")     
 
-# alpha = .25*math.pi
+a = [-1,1,0]
+r = [1.0  ,  0.0,  0.0]
 
+alpha = .25*math.pi
 
-# rotated = vo.rot(a, r, 1*alpha)
-# print("rotated =", rotated)
-
-# print("\n")
+print(" input = ", a,r, alpha)
 
 
-# unrotated = vo.rot(rotated, r, -1*alpha)
+rotated = vo.rot(a, r, 1*alpha)
+print(" rotated =", rotated)
 
-# print("unrotated =", unrotated)
+unrotated = vo.rot(rotated, r, -1*alpha)
+
+print(" unrotated =", unrotated)
+
+
+
+#___________________________________________________
+#  vector check test 
+
+print(" ============== vector check test:")
+
+a = [1, 0]
+
+b = ["q", 1, 2.333]
+
+c = [1,2,3.444]
+
+if vo.vcheck(a,b,c):
+    print(" vcheck did not pass ")
+
+
+
+
+
+
+

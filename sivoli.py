@@ -3,9 +3,8 @@ import logging
 import sys
 
 # Simple vector operations that work with Python lists
-# Very much work in progress
-# Use at you own risk
-#
+# 
+# https://github.com/troymius/sivoli
 #
 # add(a, b)
 # subtract(a, b)
@@ -27,18 +26,19 @@ import sys
 #
 #
 #
-
-
-# logging.basicConfig( filename='example.log', level=logging.DEBUG, filemode='w' )
-logging.basicConfig( stream = sys.stdout, level=logging.INFO )
+#
+# DEBUG level prints all levels
+# use INFO for normal runs
+# logging.basicConfig( filename='example.log', level=logging.debug, filemode='w', format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s" )
+logging.basicConfig( stream = sys.stdout, level=logging.INFO, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s" )
 
 #______________________________________________________
 # vector a plus vector b
 
 def add(a, b):
 
-    if len(a) != len(b):
-        logging.error(" vadd: Vectors must have equal dimensions.")
+    if vcheck(a,b):
+        logging.debug(" supplied with malformatted vectors. ")
 
     return [x + y for x, y in zip(a, b)]
 
@@ -48,8 +48,8 @@ def add(a, b):
 
 def subtract(a, b):
 
-    if len(a) != len(b):
-        logging.error(" vsubtract: Vectors must have equal dimensions.")
+    if vcheck(a,b):
+        logging.debug(" supplied with malformatted vectors. ")
 
     return [x - y for x, y in zip(a, b)]
 
@@ -58,8 +58,8 @@ def subtract(a, b):
 
 def cross(a, b):
 
-    if len(a) != len(b):
-        logging.error(" cross: Vectors must have equal dimensions.")
+    if vcheck(a,b):
+        logging.debug(" supplied with malformatted vectors. ")
 
     c = [a[1]*b[2] - a[2]*b[1],
             a[2]*b[0] - a[0]*b[2],
@@ -72,8 +72,8 @@ def cross(a, b):
 
 def dot(a, b):
 
-    if len(a) != len(b):
-        logging.error(" dot: Vectors must have equal dimensions.")
+    if vcheck(a,b):
+        logging.debug(" supplied with malformatted vectors. ")
 
     return sum(x * y for x, y in zip(a, b))
 
@@ -82,12 +82,22 @@ def dot(a, b):
 
 def scale(a, scale):
 
+    if vcheck(a):
+        logging.debug(" supplied with malformatted vector. ")
+    if not isinstance(scale, (int, float)):
+        logging.debug(" supplied with non-number scale value. ") 
+
     return([x * scale for x in a])
 
 #______________________________________________________
 # scale vector a to size a
 
 def tolength(a, size):
+
+    if vcheck(a):
+        logging.debug(" supplied with malformatted vector. ")
+    if not isinstance(size, (int, float)):
+        logging.debug(" supplied with non-number scale value. ") 
 
     b = unit(a)
 
@@ -98,20 +108,27 @@ def tolength(a, size):
 
 def unit(a):
 
+    if vcheck(a):
+        logging.debug(" supplied with malformatted vector. ")
+
     l = length(a)
+
     b=[]
     if l > 0:
         for x in a:
             b.append(x/l) 
         return(b)     
     else:
-        logging.error(" v2unit: vector length zero, cannot divide. " )  
+        logging.error(" supplied with vector length zero, cannot divide. " )  
         return()
 
 #______________________________________________________
 # return vector length
 
 def length(a):
+
+    if vcheck(a):
+        logging.debug(" supplied with malformatted vector. ")
 
     sum_of_squares = 0
     for x in a:
@@ -125,6 +142,12 @@ def length(a):
 # rotate vector v around vector r by angle alpha (radians)
 
 def rot(v, r, alpha):
+
+    if vcheck(v,r):
+        logging.debug(" supplied with malformatted vector. ")
+    if not isinstance(alpha, (int, float)):
+        logging.debug(" supplied with non-number angle value. ") 
+
 
     # remove 2pi (360 degree) rotations from alpha
     sign = math.copysign(1, alpha)
@@ -168,8 +191,11 @@ def rot(v, r, alpha):
 
 def angle(a,b, *args):
 
+    if vcheck(a,b):
+        logging.debug(" function supplied with malformatted vector. ")
+
     if length(a) == 0 or length(b) == 0:
-        logging.warning(" angle: one of the vectors has zero length")
+        logging.debug(" one of the vectors has zero length")
         return(0.0) 
 
     a = unit(a)
@@ -188,14 +214,17 @@ def angle(a,b, *args):
             else:
                 return(-1*math.acos(cos_theta))
         except:
-            logging.warning(" angle: the direction vector seems incorrectly formatted.")
-            logging.warning(" angle: the calculated angle orientation may be wrong.")
+            logging.debug(" direction vector seems unusable.")
+            logging.debug(" calculated angle orientation may be wrong.")
             return(math.acos(cos_theta)) 
 
 #______________________________________________________
 # convert orientation given by 2 perpendicular vectors to a quaternion
 
 def vecs2quat(a,b,c):
+
+    if vcheck(a,b,c):
+        logging.debug(" function supplied with malformatted vector. ")
 
     ux = [1,0,0]
     uy = [0,1,0]
@@ -208,15 +237,17 @@ def vecs2quat(a,b,c):
 
     # check that a is perpendicular to b
     perpend_check = math.degrees(math.acos(dot(a,b)))
-    #print(" perpend_check (should be close to 90): ", perpend_check)
+    # print(" perpend_check (should be close to 90): ", perpend_check)
 
     # make things perfectly rectangular by replacing the original b with a new b
     c = cross(a,b)
     b = cross(c,a)
-    #print("b = ",b)
+
+    logging.debug(" b = %s", b)
+
     abc = [a,b,c]
 
-    #print(" abc = ", abc)
+    logging.debug(" abc = %s", abc)
 
     # from reference base vectors u* to rotated ones
     dx = subtract(a, ux)
@@ -225,12 +256,12 @@ def vecs2quat(a,b,c):
 
     d = [dx,dy,dz]
 
-    #print("d = ", d)
+    logging.debug(" d = %s", d)
 
     d_lengths = [length(dx),length(dy),length(dz)]
 
     if max(d_lengths) < 1E-6:
-       #print(" Rotated system practically coincides with reference coordinate system. ") 
+       # print(" Rotated system practically coincides with reference coordinate system. ") 
        return([0,1,0.0])
     
     # find the shortest d
@@ -242,19 +273,19 @@ def vecs2quat(a,b,c):
 
     # let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
 
-    #print("abc = ", abc)
-    #print("d = ", d)
-    #print("u = ", u)
+    logging.debug(" after sorting abc = %s", abc)
+    logging.debug(" after sorting  d = %s", d)
+    logging.debug(" after sorting  u = %s", u)
 
     rot_axis = unit(cross(d[0], d[1]))
 
-    #print("rot axis = ", rot_axis)
+    logging.debug(" after sorting rot_axis = %s", rot_axis)
 
     # select abc and u to calculate alpha
     abc_select = abc[0]
     u_select   = u[0]
-    # the same thing can be done with abc[1] and u[1]
-    # tested and gives identical results
+    # the same thing can be done with abc[1] and u[1] ...
+    # ... tested, gives identical results
 
     # project abc_select and u_select onto rot_axis pane
     # (don't worry about the lenth of the projected vector)
@@ -264,9 +295,8 @@ def vecs2quat(a,b,c):
     u_select_proj = unit(subtract(u_select, tmp))
     alpha = angle(u_select_proj, abc_select_proj, rot_axis)
 
-
-    #print(" alpha = ", alpha)
-    #print(" abc_select_proj, u_select+proj ", abc_select_proj, u_select_proj)
+    logging.debug(" alpha = %s", alpha)
+    logging.debug(" abc_select_proj, u_select_proj = %s %s", abc_select_proj, u_select_proj)
 
     vu = unit(rot_axis)
     q = math.cos(alpha/2)
@@ -278,6 +308,27 @@ def vecs2quat(a,b,c):
     
 
 
+#______________________________________________________
+
+def vcheck(*args):
+
+    # returns True if there is an issue
+
+    status = False
+
+    for v in args:
+
+        if len(v) == 3: 
+            for x in v:
+                if not isinstance(x, (int, float)):
+                   logging.info(" vector format check - not made of only floats or integers %s ", v)  
+                   status = True 
+
+        else:
+            logging.info(" vector format check - not 3-dimensional %s ", v)
+            status = True 
+
+    return(status)        
 
 
 
