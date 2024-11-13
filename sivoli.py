@@ -17,7 +17,7 @@ import sys
 # angle(a,b)
 # rot(v, r, alpha)
 # vecs2quat(a,b)
-#
+# vcheck(a,b,c,...)
 #
 #
 #
