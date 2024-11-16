@@ -120,10 +120,10 @@ if sv.vcheck(a,b,c):
 
 print(" ============== ray plane intersect test:")
 
-normal = [1,0,0]
-planepoint = [ 0, 0, -0]
-ray = [-10, 0, -5]
-raypoint = [1, 0, 0]
+normal = [15555,0,0]
+planepoint = [ 0, 6660, -5]
+ray = [-10000, 0, -5000]
+raypoint = [2, 0, 0]
 
 intersect = sv.rayplanex(normal, planepoint, ray, raypoint)
 

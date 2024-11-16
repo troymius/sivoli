@@ -18,7 +18,7 @@ import sys
 # rot(v, r, alpha)
 # vecs2quat(a,b)
 # vcheck(a,b,c,...)
-#
+# rayplanex(normal, planepoint, ray, raypoint)
 #
 #
 #
@@ -214,7 +214,9 @@ def angle(a,b, *args):
         except:
             logging.debug(" direction vector seems unusable.")
             logging.debug(" calculated angle orientation may be wrong.")
-      
+
+    # need to add something here to indicate how the angle sign relates to cross(a, b)
+
     return(angle)    
 
 #______________________________________________________
@@ -338,8 +340,8 @@ def vcheck(*args):
 def rayplanex(normal, planepoint, ray, raypoint):
 
     # imagine the raypoint is a meteorite passing by the top of a lighthouse
-    # plane is earth
     # ray is meteorite velocity vector
+    # plane is earth
     # plane point is a dog nearby
     # intersect is where the meteorite hits the earth
 
@@ -348,7 +350,7 @@ def rayplanex(normal, planepoint, ray, raypoint):
     normal = unit(normal)
     ray = unit(ray)
 
-    # vector from ray point to planepoint (from meteorite to the dog)
+    # vector from ray point to planepoint (from meteorite or top of lighthouse to the dog)
     rppp = subtract(planepoint, raypoint)
     logging.info(" rppp %s ", rppp)
 
@@ -356,7 +358,7 @@ def rayplanex(normal, planepoint, ray, raypoint):
     rppp_proj_n = scale(normal, dot(rppp, normal))
     logging.info(" rppp_proj_n %s ", rppp_proj_n)
 
-    # cosine of angle between normal and ray
+    # cosine of angle between normal and ray (between lighthouse and meteorive velocity vector)
     cosi = dot(unit(rppp_proj_n), ray)
     logging.info(" cosi %s ", cosi)
 
@@ -365,7 +367,7 @@ def rayplanex(normal, planepoint, ray, raypoint):
        logging.info(" the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
        exit
                          
-    # vector from raypoint to intersect (from meteorite to intersect)
+    # vector from raypoint to intersect (from meteorite to earth intersect)
     raypoint2intersect = scale(ray, length(rppp_proj_n)/cosi)
 
     logging.info(" raypoint2intersect %s ", raypoint2intersect)
