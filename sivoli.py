@@ -29,8 +29,9 @@ import sys
 #
 # DEBUG level prints all levels
 # use INFO for normal runs
-# logging.basicConfig( filename='example.log', level=logging.debug, filemode='w', format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s" )
-logging.basicConfig( stream = sys.stdout, level=logging.INFO, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s" )
+#
+# logging.basicConfig( level=logging.DEBUG, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", filename='example.log', filemode='w' )
+logging.basicConfig( level=logging.INFO,  format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", stream = sys.stdout )
 
 #______________________________________________________
 # vector a plus vector b
@@ -201,22 +202,20 @@ def angle(a,b, *args):
     a = unit(a)
     b = unit(b)
 
-    cos_theta = sum(x * y for x, y in zip(a, b))
+    angle = math.acos( sum(x * y for x, y in zip(a, b)) )
 
     # if there is a 3rd argument indicating positive direction
     if args:
         try:
             direction_vec = args[0]
             c_pos = cross(a,b)
-            c_neg = cross(b,a)
-            if length(subtract(direction_vec, c_pos)) <= length(subtract(direction_vec, c_neg)):
-                return(math.acos(cos_theta)) 
-            else:
-                return(-1*math.acos(cos_theta))
+            sign = dirsign(c_pos, direction_vec)
+            return(sign*angle)
         except:
             logging.debug(" direction vector seems unusable.")
             logging.debug(" calculated angle orientation may be wrong.")
-            return(math.acos(cos_theta)) 
+      
+    return(angle)    
 
 #______________________________________________________
 # convert orientation given by 2 perpendicular vectors to a quaternion
@@ -329,6 +328,74 @@ def vcheck(*args):
             status = True 
 
     return(status)        
+
+
+
+
+#______________________________________________________
+# find intersection point of a ran and a plane
+
+def rayplanex(normal, planepoint, ray, raypoint):
+
+    # imagine the raypoint is a meteorite passing by the top of a lighthouse
+    # plane is earth
+    # ray is meteorite velocity vector
+    # plane point is a dog nearby
+    # intersect is where the meteorite hits the earth
+
+    vcheck(normal, planepoint, ray, raypoint)
+
+    normal = unit(normal)
+    ray = unit(ray)
+
+    # vector from ray point to planepoint (from meteorite to the dog)
+    rppp = subtract(planepoint, raypoint)
+    logging.info(" rppp %s ", rppp)
+
+    # project vrppp onto normal (vector from top to bottom of the lighthouse)
+    rppp_proj_n = scale(normal, dot(rppp, normal))
+    logging.info(" rppp_proj_n %s ", rppp_proj_n)
+
+    # cosine of angle between normal and ray
+    cosi = dot(unit(rppp_proj_n), ray)
+    logging.info(" cosi %s ", cosi)
+
+
+    if abs(cosi) < 1e-16:
+       logging.info(" the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
+       exit
+                         
+    # vector from raypoint to intersect (from meteorite to intersect)
+    raypoint2intersect = scale(ray, length(rppp_proj_n)/cosi)
+
+    logging.info(" raypoint2intersect %s ", raypoint2intersect)
+
+    intersect = add(raypoint, raypoint2intersect)
+
+    return(intersect)
+
+
+
+
+
+    
+#______________________________________________________
+# return +1 of a and b are in the same half-space, else return -1
+
+def dirsign(a, b):
+
+    cosi = dot(a, b)
+    
+    if cosi < 0:
+        return(-1)
+    else:
+        return(1)
+
+
+
+
+
+          
 
 
 

@@ -1,4 +1,4 @@
-import sivoli as vo
+import sivoli as sv
 import math
 import random
 
@@ -14,12 +14,12 @@ for i in range(0,10):
     print(" i = ", i)
       
     # generate a random vector
-    v = vo.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
+    v = sv.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
     # generate a random rotattion
     alpha = (random.random()-0.5)*math.pi*77   
 
     # create corresponding quaternion
-    vu = vo.unit(v)
+    vu = sv.unit(v)
     q = math.cos(alpha/2)
     qx = vu[0]*math.sin(alpha/2)
     qy = vu[1]*math.sin(alpha/2)
@@ -30,15 +30,15 @@ for i in range(0,10):
     # create 2 perpendicular vectors
     ux = [  444.9  ,    0      ,   0]
     uy = [  0      ,   1.423   ,   0]
-    uz = vo.cross(ux,uy)
+    uz = sv.cross(ux,uy)
 
-    urx = vo.rot(ux, v, alpha)
-    ury = vo.rot(uy, v, alpha)
-    urz = vo.rot(uz, v, alpha)
+    urx = sv.rot(ux, v, alpha)
+    ury = sv.rot(uy, v, alpha)
+    urz = sv.rot(uz, v, alpha)
 
     # print("urx, ury: ", urx, ury)
 
-    quaternion_out = vo.vecs2quat(urx,ury,urz)
+    quaternion_out = sv.vecs2quat(urx,ury,urz)
     print(" quaternion_out =", quaternion_out)
 
     for x, y in zip(quaternion_in, quaternion_out):
@@ -66,11 +66,11 @@ print(" ============== quaternion calculation test 2:")
 # create 2 perpendicular vectors
 ux = [ 0.446186    ,    1.62461     ,  -1.07776    ]
 uz = [ -1.94782       ,  0.324271   ,   -0.317579  ]
-uy = vo.cross(uz,ux)
+uy = sv.cross(uz,ux)
 
 # print("urx, ury: ", urx, ury)
 
-quaternion_out = vo.vecs2quat(ux,uy,uz)
+quaternion_out = sv.vecs2quat(ux,uy,uz)
 print(" quaternion = ", quaternion_out)
 
 
@@ -90,10 +90,10 @@ alpha = .25*math.pi
 print(" input = ", a,r, alpha)
 
 
-rotated = vo.rot(a, r, 1*alpha)
+rotated = sv.rot(a, r, 1*alpha)
 print(" rotated =", rotated)
 
-unrotated = vo.rot(rotated, r, -1*alpha)
+unrotated = sv.rot(rotated, r, -1*alpha)
 
 print(" unrotated =", unrotated)
 
@@ -110,12 +110,23 @@ b = ["q", 1, 2.333]
 
 c = [1,2,3.444]
 
-if vo.vcheck(a,b,c):
+if sv.vcheck(a,b,c):
     print(" vcheck did not pass ")
 
 
 
+#___________________________________________________
+#  ray plane intersect test 
 
+print(" ============== ray plane intersect test:")
 
+normal = [1,0,0]
+planepoint = [ 0, 0, -0]
+ray = [-10, 0, -5]
+raypoint = [1, 0, 0]
+
+intersect = sv.rayplanex(normal, planepoint, ray, raypoint)
+
+print(" intersect = ", intersect)
 
 
