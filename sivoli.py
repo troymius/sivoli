@@ -382,7 +382,7 @@ def rayplanex(normal, planepoint, ray, raypoint):
 
     
 #______________________________________________________
-# return +1 of a and b are in the same half-space, else return -1
+# return +1 if a and b form a sharp angle, else return -1
 
 def dirsign(a, b):
 
