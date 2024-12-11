@@ -130,3 +130,97 @@ intersect = sv.rayplanex(normal, planepoint, ray, raypoint)
 print(" intersect = ", intersect)
 
 
+
+#_________________________________________________
+
+print(" ============== sys2sys test:")
+
+a1 = [ 0, -1, 0]
+b1 = [1, 0, 0]
+c1 = [0,0,1]
+a2 = [-0.5, 0.5, 0]
+b2 = [-0.5, -0.5, 0]
+c2 = [0,0,1]
+
+print(" sys2sys: ", sv.sys2sys2quat( a2, b2, c2, a1, b1, c1))
+
+
+#___________________________________________________
+#  sys2sys test 
+
+print(" ============== sys2sys  test 2:") 
+
+
+for i in range(0,10):
+
+    print(" i = ", i)
+      
+    # generate a random vector
+    v = sv.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
+    # generate a random rotattion
+    alpha = (random.random()-0.5)*math.pi*77   
+
+
+    # create 2 perpendicular vectors
+    ax = [  444.9  ,    0      ,   0]
+    ay = [  0      ,   1.423   ,   0]
+    az = sv.cross(ux,uy)
+
+    arx = sv.rot(ux, v, alpha)
+    ary = sv.rot(uy, v, alpha)
+    arz = sv.rot(uz, v, alpha)
+
+
+
+
+
+
+#___________________________________________________
+#  sys2sys quaternion calculation test 
+
+print(" ============== sys2sys quaternion calculation  test 2:") 
+
+
+for i in range(0,10000):
+
+    print(" i = ", i)
+      
+    # generate a random vector
+    v = sv.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
+    # generate a random rotattion
+    alpha = (random.random()-0.5)*math.pi*77   
+
+
+    # create 2 perpendicular vectors
+    ax = [  444.9  ,    0      ,   0]
+    ay = [  0      ,   1.423   ,   0]
+    az = sv.cross(ax,ay)
+
+    arx = sv.rot(ax, v, alpha)
+    ary = sv.rot(ay, v, alpha)
+    arz = sv.rot(az, v, alpha)
+
+    # generate a random vector
+    v = sv.tolength([random.random()*10-5, random.random()*10-5, random.random()*10-5], random.random()*5000)
+    # generate a random rotattion
+    alpha = random.randint(-180,180)  
+    print(" alpha = ", alpha) 
+    alpha = alpha*math.pi/180
+
+    # create corresponding quaternion
+    vu = sv.unit(v)
+    q = math.cos(alpha/2)
+    qx = vu[0]*math.sin(alpha/2)
+    qy = vu[1]*math.sin(alpha/2)
+    qz = vu[2]*math.sin(alpha/2)
+    quaternion_in = [ q, qx, qy, qz ]
+    print(" quaternion_in =", quaternion_in,  [alpha, v[0], v[1], v[2] ])    
+
+    brx = sv.rot(arx, v, alpha)
+    bry = sv.rot(ary, v, alpha)
+    brz = sv.rot(arz, v, alpha)
+
+    quaternion_out = sv.sys2sys2quat(arx, ary, arz, brx, bry, brz)
+
+    print(" quaternion out: ", quaternion_out )
+

@@ -201,8 +201,16 @@ def angle(a,b, *args):
 
     a = unit(a)
     b = unit(b)
+    
+    # treat situations when unitv dotprod is outside (-1,1) due to numerical error
+    dotprod = dot(a, b)
+    if dotprod < -1.0:
+        dotprod = -1.0
+    if dotprod >  1.0:
+        dotprod = 1.0    
 
-    angle = math.acos( sum(x * y for x, y in zip(a, b)) )
+    # angle = math.acos( sum(x * y for x, y in zip(a, b)) )
+    angle = math.acos(dotprod)
 
     # if there is a 3rd argument indicating positive direction
     if args:
@@ -305,7 +313,95 @@ def vecs2quat(a,b,c):
     qy = vu[1]*math.sin(alpha/2)
     qz = vu[2]*math.sin(alpha/2)
 
-    return([q, qx, qy, qz])
+    return([q, qx, qy, qz], [alpha, vu[0], vu[1], vu[2]])
+    
+
+
+#______________________________________________________
+# mutual orientation of 2 systems, each defined by 3 orthogonal vectors
+# returns transform from sys 1 to sys 2  
+
+def sys2sys2quat(a1, b1, c1, a2, b2, c2):
+
+    if vcheck( a1, b1, c1, a2, b2, c2 ):
+        logging.debug(" function supplied with malformatted vectors. ")
+
+    a1 = unit(a1)
+    b1 = unit(b1)
+    # make things perfectly rectangular by replacing the original b with a new b
+    c1 = cross(a1,b1)
+    b1 = cross(c1,a1)
+    abc1 = [a1,b1,c1]
+    logging.debug(" abc1 = %s", abc1)
+
+    a2 = unit(a2)
+    b2 = unit(b2)
+    # make things perfectly rectangular by replacing the original b with a new b
+    c2 = cross(a2,b2)
+    b2 = cross(c2,a2)
+    abc2 = [a2,b2,c2]
+    logging.debug(" abc2 = %s", abc2)
+
+
+
+    # from sys 1 to sys 2
+    dx = subtract(a2, a1)
+    dy = subtract(b2, b1)
+    dz = subtract(c2, c1)
+
+    d = [dx,dy,dz]
+
+    logging.debug(" d = %s", d)
+
+    d_lengths = [length(dx),length(dy),length(dz)]
+
+    if max(d_lengths) < 1E-6:
+       logging.info(" Rotated system practically coincides with reference coordinate system. ") 
+       return([1,0,0.0], [0,1,0.0] )
+    
+    # find the shortest d
+    d_min_value = min(d_lengths)
+    d_min_index = d_lengths.index(d_min_value)
+    d.pop(d_min_index)
+    abc1.pop(d_min_index)
+    abc2.pop(d_min_index)    
+
+    # ... let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
+
+    logging.debug(" after sorting abc1 = %s", abc1)
+    logging.debug(" after sorting abc2 = %s", abc2)
+    logging.debug(" after sorting    d = %s", d)
+
+
+    rot_axis = unit(cross(d[0], d[1]))
+
+    logging.debug(" after sorting rot_axis = %s", rot_axis)
+
+    # select abc and u to calculate alpha
+    abc1_select = abc1[0]
+    abc2_select = abc2[0]
+    # the same thing can be done with abc[1] and u[1] ...
+    # ... tested, gives identical results
+
+    # project abc1_select and abc2_select onto rot_axis plane
+    # (don't worry about the lenth of the projected vector)
+    tmp   = scale(unit(rot_axis), dot(abc1_select, rot_axis))
+    abc1_select_proj = unit(subtract(abc1_select, tmp))
+    tmp   = scale(unit(rot_axis), dot(abc2_select, rot_axis))
+    abc2_select_proj = unit(subtract(abc2_select, tmp))
+
+    alpha = angle(abc1_select_proj, abc2_select_proj, rot_axis)
+
+    logging.debug(" alpha = %s", alpha)
+    logging.debug(" abc1_select_proj, abc2_select_proj = %s %s", abc1_select_proj, abc2_select_proj)
+
+    vu = unit(rot_axis)
+    q = math.cos(alpha/2)
+    qx = vu[0]*math.sin(alpha/2)
+    qy = vu[1]*math.sin(alpha/2)
+    qz = vu[2]*math.sin(alpha/2)
+
+    return([q, qx, qy, qz], [alpha, vu[0], vu[1], vu[2]])
     
 
 
