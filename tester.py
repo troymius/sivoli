@@ -99,21 +99,6 @@ print(" unrotated =", unrotated)
 
 
 
-#___________________________________________________
-#  vector check test 
-
-print(" ============== vector check test:")
-
-a = [1, 0]
-
-b = ["q", 1, 2.333]
-
-c = [1,2,3.444]
-
-if sv.vcheck(a,b,c):
-    print(" vcheck did not pass ")
-
-
 
 #___________________________________________________
 #  ray plane intersect test 

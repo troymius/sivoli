@@ -2,8 +2,8 @@ import math
 import logging
 import sys
 
-# Simple vector operations that work with Python lists
-# 
+# SImple Vector Operations that work with Python LIsts (sivoli)
+#
 # https://github.com/troymius/sivoli
 #
 # add(a, b)
@@ -17,12 +17,14 @@ import sys
 # angle(a,b)
 # rot(v, r, alpha)
 # vecs2quat(a,b)
-# vcheck(a,b,c,...)
+# sys2sys2quat(a1, b1, c1, a2, b2, c2) 
 # rayplanex(normal, planepoint, ray, raypoint)
 #
+# 
+# argconv(caller_name, arglist, argtypes)
 #
-#
-#
+# to do maybe:
+# shortest connection between 2 lines in space
 #
 #
 #
@@ -38,8 +40,8 @@ logging.basicConfig( level=logging.INFO,  format="[%(filename)s:%(lineno)s - %(f
 
 def add(a, b):
 
-    if vcheck(a,b):
-        logging.debug(" supplied with malformatted vectors. ")
+    # make sure inputs are what this function expects
+    [a, b] = argconv("add", [a, b] , 2*["sv_vec3float"])
 
     return [x + y for x, y in zip(a, b)]
 
@@ -49,8 +51,8 @@ def add(a, b):
 
 def subtract(a, b):
 
-    if vcheck(a,b):
-        logging.debug(" supplied with malformatted vectors. ")
+    # make sure inputs are what this function expects
+    [a, b] = argconv("subtract", [a, b] , 2*["sv_vec3float"])
 
     return [x - y for x, y in zip(a, b)]
 
@@ -59,8 +61,8 @@ def subtract(a, b):
 
 def cross(a, b):
 
-    if vcheck(a,b):
-        logging.debug(" supplied with malformatted vectors. ")
+    # make sure inputs are what this function expects
+    [a, b] = argconv("cross", [a, b] , 2*["sv_vec3float"])
 
     c = [a[1]*b[2] - a[2]*b[1],
             a[2]*b[0] - a[0]*b[2],
@@ -73,8 +75,8 @@ def cross(a, b):
 
 def dot(a, b):
 
-    if vcheck(a,b):
-        logging.debug(" supplied with malformatted vectors. ")
+    # make sure inputs are what this function expects
+    [a, b] = argconv("dot", [a, b] , 2*["sv_vec3float"])
 
     return sum(x * y for x, y in zip(a, b))
 
@@ -83,10 +85,8 @@ def dot(a, b):
 
 def scale(a, scale):
 
-    if vcheck(a):
-        logging.debug(" supplied with malformatted vector. ")
-    if not isinstance(scale, (int, float)):
-        logging.debug(" supplied with non-number scale value. ") 
+    # make sure inputs are what this function expects
+    [a, scale] = argconv("scale", [a, scale], ["sv_vec3float", "sv_float"]) 
 
     return([x * scale for x in a])
 
@@ -95,10 +95,8 @@ def scale(a, scale):
 
 def tolength(a, size):
 
-    if vcheck(a):
-        logging.debug(" supplied with malformatted vector. ")
-    if not isinstance(size, (int, float)):
-        logging.debug(" supplied with non-number scale value. ") 
+    # make sure inputs are what this function expects
+    [a, size] = argconv("tolength", [a, size], ["sv_vec3float", "sv_float"]) 
 
     b = unit(a)
 
@@ -109,8 +107,8 @@ def tolength(a, size):
 
 def unit(a):
 
-    if vcheck(a):
-        logging.debug(" supplied with malformatted vector. ")
+    # make sure inputs are what this function expects
+    [a] = argconv("unit", [a], ["sv_vec3float"]) 
 
     l = length(a)
 
@@ -128,8 +126,8 @@ def unit(a):
 
 def length(a):
 
-    if vcheck(a):
-        logging.debug(" supplied with malformatted vector. ")
+    # make sure inputs are what this function expects
+    [a] = argconv("length", [a], ["sv_vec3float"])    
 
     sum_of_squares = 0
     for x in a:
@@ -144,10 +142,8 @@ def length(a):
 
 def rot(v, r, alpha):
 
-    if vcheck(v,r):
-        logging.debug(" supplied with malformatted vector. ")
-    if not isinstance(alpha, (int, float)):
-        logging.debug(" supplied with non-number angle value. ") 
+    # make sure inputs are what this function expects
+    [v, r, alpha] = argconv("rot", [v, r, alpha] , ["sv_vec3float","sv_vec3float","sv_float"])    
 
 
     # remove 2pi (360 degree) rotations from alpha
@@ -192,8 +188,12 @@ def rot(v, r, alpha):
 
 def angle(a,b, *args):
 
-    if vcheck(a,b):
-        logging.debug(" function supplied with malformatted vector. ")
+    # make sure inputs are what this function expects
+    [a,b] = argconv("angle", [a,b] , 2*["sv_vec3float"])
+    if args:
+        c = args[0]
+        [c] = argconv("angle", [c] , ["sv_vec3float"])
+
 
     if length(a) == 0 or length(b) == 0:
         logging.debug(" one of the vectors has zero length")
@@ -229,11 +229,12 @@ def angle(a,b, *args):
 
 #______________________________________________________
 # convert orientation given by 2 perpendicular vectors to a quaternion
+# as quaternion and angle-axis lists
 
 def vecs2quat(a,b,c):
 
-    if vcheck(a,b,c):
-        logging.debug(" function supplied with malformatted vector. ")
+    # make sure inputs are what this function expects
+    [a,b,c] = argconv("vecs2quat", [a,b,c] , 3*["sv_vec3float"])
 
     ux = [1,0,0]
     uy = [0,1,0]
@@ -320,11 +321,12 @@ def vecs2quat(a,b,c):
 #______________________________________________________
 # mutual orientation of 2 systems, each defined by 3 orthogonal vectors
 # returns transform from sys 1 to sys 2  
+# as quaternion and angle-axis lists
 
 def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
-    if vcheck( a1, b1, c1, a2, b2, c2 ):
-        logging.debug(" function supplied with malformatted vectors. ")
+    # make sure inputs are what this function expects
+    [a1, b1, c1, a2, b2, c2] = argconv("sys2sys2quat", [a1, b1, c1, a2, b2, c2] , 6*["sv_vec3float"])
 
     a1 = unit(a1)
     b1 = unit(b1)
@@ -403,45 +405,19 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
     return([q, qx, qy, qz], [alpha, vu[0], vu[1], vu[2]])
     
-
-
 #______________________________________________________
-
-def vcheck(*args):
-
-    # returns True if there is an issue
-
-    status = False
-
-    for v in args:
-
-        if len(v) == 3: 
-            for x in v:
-                if not isinstance(x, (int, float)):
-                   logging.info(" vector format check - not made of only floats or integers %s ", v)  
-                   status = True 
-
-        else:
-            logging.info(" vector format check - not 3-dimensional %s ", v)
-            status = True 
-
-    return(status)        
-
-
-
-
-#______________________________________________________
-# find intersection point of a ran and a plane
+# find intersection point of a ray and a plane
 
 def rayplanex(normal, planepoint, ray, raypoint):
 
     # imagine the raypoint is a meteorite passing by the top of a lighthouse
-    # ray is meteorite velocity vector
-    # plane is earth
-    # plane point is a dog nearby
-    # intersect is where the meteorite hits the earth
+    # ray ... is meteorite velocity vector
+    # plane ... is the ground
+    # plane point ... is a dog nearby
+    # intersect ... is where the meteorite hits the ground
 
-    vcheck(normal, planepoint, ray, raypoint)
+    # make sure inputs are what this function expects
+    [normal, planepoint, ray, raypoint] = argconv("rayplanex", [normal, planepoint, ray, raypoint] , 4*["sv_vec3float"])
 
     normal = unit(normal)
     ray = unit(ray)
@@ -473,14 +449,13 @@ def rayplanex(normal, planepoint, ray, raypoint):
     return(intersect)
 
 
-
-
-
-    
 #______________________________________________________
 # return +1 if a and b form a sharp angle, else return -1
 
 def dirsign(a, b):
+
+    # make sure inputs are what this function expects
+    [a,b] = argconv("dirsign", [a,b] , 2*["sv_vec3float"])
 
     cosi = dot(a, b)
     
@@ -488,6 +463,68 @@ def dirsign(a, b):
         return(-1)
     else:
         return(1)
+
+
+#____________________________________________________________________  
+# 
+# argconv tries to convert function arguments to what the caller function expects.
+#
+# These argument types are defined:
+#    sv_string
+#    sv_int
+#    sv_float
+#    sv_vec3float ... 3 dimensional vector
+#
+# Example call: [a,b,c] = argconv("test_caller", [a, b, c], ["sv_string", "sv_vec3float", "sv_int"])
+
+def argconv(caller_name, arglist, argtypes):
+
+    if len(arglist) != len(argtypes):
+       logging.debug(" Error: ARG conversion by function %s(): len(arglist) not equatl to len(argtypes) ", caller_name)
+
+
+    for arg_i in range(0, len(arglist)):
+
+        if argtypes[arg_i] == "sv_float":
+            try:
+                arglist[arg_i] = float(arglist[arg_i])
+            except:
+                logging.debug(" Error: Function %s was passed an argument %s that could not convert to float.", caller_name, arglist[arg_i])
+                sys.exit()
+
+        if argtypes[arg_i] == "sv_int":
+            try:
+                arglist[arg_i] = int(arglist[arg_i])
+            except:
+                logging.debug(" Error: Function %s was passed an argument %s that could not convert to int.", caller_name, arglist[arg_i])
+                sys.exit()
+
+        if argtypes[arg_i] == "sv_string":
+            try:
+                for vec_item in arglist[arg_i]:
+                   vec_item = str(vec_item)
+            except:
+                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a string.", caller_name, arglist[arg_i])
+                sys.exit()
+
+        if argtypes[arg_i] == "sv_vec3float":
+            try:
+                for vec_item in arglist[arg_i]:
+                    vec_item = float(vec_item)
+            except:
+                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a list of floats.", caller_name, arglist[arg_i])
+                sys.exit()
+            if len(arglist[arg_i]) != 3:
+                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a list of 3 floats.", caller_name, arglist[arg_i])
+                sys.exit()
+
+
+    return(arglist)
+
+
+
+
+       
 
 
 
