@@ -31,8 +31,12 @@ import sys
 # DEBUG level prints all levels
 # use INFO for normal runs
 #
-# logging.basicConfig( level=logging.info, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", filename='example.log', filemode='w' )
-logging.basicConfig( level=logging.INFO,  format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", stream = sys.stdout )
+# logger.basicConfig( level=logger.info, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", filename='example.log', filemode='w' )
+# logger.basicConfig( level=logger.INFO,  format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", stream = sys.stdout )
+
+# this supposedly leaves logger config to caller
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 # global tolerance for floating point comparisons
 TOL = 1e-9
@@ -102,7 +106,7 @@ def tolength(a, size):
     vcheck(a, 3)
 
     if length(a) < TOL:
-        logging.error(" Error: tolength() was passed argument %s that is a zero length vector.", a)
+        logger.error(" Error: tolength() was passed argument %s that is a zero length vector.", a)
         return None
 
     b = unit(a)
@@ -119,7 +123,7 @@ def unit(a):
     l = length(a)
 
     if l < TOL:
-        logging.error(" Error: unit() was passed argument %s that is a zero length vector.", a)
+        logger.error(" Error: unit() was passed argument %s that is a zero length vector.", a)
         return None
 
     b=[]
@@ -154,7 +158,7 @@ def rot(v, r, alpha):
 
     # check that v and r are not parallel, if so, give a warning
     if length(cross(v, r)) < TOL:
-        logging.info(" Warning: rot() v and r are parallel, rotation will not change v. ")
+        logger.info(" Warning: rot() v and r are parallel, rotation will not change v. ")
         return(v)
 
     # remove 2pi (360 degree) rotations from alpha
@@ -223,8 +227,8 @@ def angle(a, b, *args):
             sign = dirsign(c_pos, direction_vec)
             return(sign*angle)
         except:
-            logging.info(" direction vector seems unusable.")
-            logging.info(" calculated angle orientation may be wrong.")
+            logger.info(" direction vector seems unusable.")
+            logger.info(" calculated angle orientation may be wrong.")
 
     # need to add something here to indicate how the angle sign relates to cross(a, b)
 
@@ -234,89 +238,9 @@ def angle(a, b, *args):
 # convert orientation given by 2 perpendicular vectors to a quaternion
 # as quaternion and angle-axis lists
 
-def vecs2quat(a,b):
+def vecs2quat(a, b):
 
-    vcheck(a, 3)
-    vcheck(b, 3)
-
-    ux = [1,0,0]
-    uy = [0,1,0]
-    uz = [0,0,1]
-
-    u = [ux, uy, uz]
-
-    a = unit(a)
-    b = unit(b)
-
-
-    # make things perfectly rectangular by replacing the original b with a new b
-    c = cross(a,b)
-    b = cross(c,a)
-
-    logging.info(" b = %s", b)
-
-    abc = [a,b,c]
-
-    logging.info(" abc = %s", abc)
-
-    # from reference base vectors u* to rotated ones
-    dx = subtract(a, ux)
-    dy = subtract(b, uy)
-    dz = subtract(c, uz)
-
-    d = [dx,dy,dz]
-
-    logging.info(" d = %s", d)
-
-    d_lengths = [length(dx),length(dy),length(dz)]
-
-    if max(d_lengths) < TOL:
-       logging.info(" Rotated system practically coincides with reference coordinate system. ") 
-       return([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0])
-    
-    # find the shortest d
-    d_min_value = min(d_lengths)
-    d_min_index = d_lengths.index(d_min_value)
-    d.pop(d_min_index)
-    abc.pop(d_min_index)
-    u.pop(d_min_index)
-
-    # let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
-
-    logging.info(" after sorting abc = %s", abc)
-    logging.info(" after sorting  d = %s", d)
-    logging.info(" after sorting  u = %s", u)
-
-    rot_axis = unit(cross(d[0], d[1]))
-
-    logging.info(" after sorting rot_axis = %s", rot_axis)
-
-    # select abc and u to calculate alpha
-    abc_select = abc[0]
-    u_select   = u[0]
-    # the same thing can be done with abc[1] and u[1] ...
-    # ... tested, gives identical results
-
-    # project abc_select and u_select onto rot_axis pane
-    # (don't worry about the lenth of the projected vector)
-    tmp   = scale(unit(rot_axis), dot(abc_select, rot_axis))
-    abc_select_proj = unit(subtract(abc_select, tmp))
-    tmp   = scale(unit(rot_axis), dot(u_select, rot_axis))
-    u_select_proj = unit(subtract(u_select, tmp))
-    alpha = angle(u_select_proj, abc_select_proj, rot_axis)
-
-    logging.info(" alpha = %s", alpha)
-    logging.info(" abc_select_proj, u_select_proj = %s %s", abc_select_proj, u_select_proj)
-
-    vu = unit(rot_axis)
-    q = math.cos(alpha/2)
-    qx = vu[0]*math.sin(alpha/2)
-    qy = vu[1]*math.sin(alpha/2)
-    qz = vu[2]*math.sin(alpha/2)
-
-    return([q, qx, qy, qz], [alpha, vu[0], vu[1], vu[2]])
-    
-
+    return sys2sys2quat([1,0,0], [0,1,0], a, b)
 
 #______________________________________________________
 # mutual orientation of 2 systems, each defined by 2 orthogonal vectors
@@ -336,7 +260,7 @@ def sys2sys2quat(a1, b1, a2, b2):
     c1 = cross(a1,b1)
     b1 = cross(c1,a1)
     abc1 = [a1,b1,c1]
-    logging.info(" abc1 = %s", abc1)
+    logger.info(" abc1 = %s", abc1)
 
     a2 = unit(a2)
     b2 = unit(b2)
@@ -344,7 +268,7 @@ def sys2sys2quat(a1, b1, a2, b2):
     c2 = cross(a2,b2)
     b2 = cross(c2,a2)
     abc2 = [a2,b2,c2]
-    logging.info(" abc2 = %s", abc2)
+    logger.info(" abc2 = %s", abc2)
 
 
 
@@ -355,12 +279,12 @@ def sys2sys2quat(a1, b1, a2, b2):
 
     d = [dx,dy,dz]
 
-    logging.info(" d = %s", d)
+    logger.info(" d = %s", d)
 
     d_lengths = [length(dx),length(dy),length(dz)]
 
     if max(d_lengths) < TOL:
-       logging.info(" Rotated system practically coincides with reference coordinate system. ") 
+       logger.info(" Rotated system practically coincides with reference coordinate system. ") 
        return([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0])
     
     # find the shortest d
@@ -372,14 +296,14 @@ def sys2sys2quat(a1, b1, a2, b2):
 
     # ... let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
 
-    logging.info(" after sorting abc1 = %s", abc1)
-    logging.info(" after sorting abc2 = %s", abc2)
-    logging.info(" after sorting    d = %s", d)
+    logger.info(" after sorting abc1 = %s", abc1)
+    logger.info(" after sorting abc2 = %s", abc2)
+    logger.info(" after sorting    d = %s", d)
 
 
     rot_axis = unit(cross(d[0], d[1]))
 
-    logging.info(" after sorting rot_axis = %s", rot_axis)
+    logger.info(" after sorting rot_axis = %s", rot_axis)
 
     # select abc and u to calculate alpha
     abc1_select = abc1[0]
@@ -396,8 +320,8 @@ def sys2sys2quat(a1, b1, a2, b2):
 
     alpha = angle(abc1_select_proj, abc2_select_proj, rot_axis)
 
-    logging.info(" alpha = %s", alpha)
-    logging.info(" abc1_select_proj, abc2_select_proj = %s %s", abc1_select_proj, abc2_select_proj)
+    logger.info(" alpha = %s", alpha)
+    logger.info(" abc1_select_proj, abc2_select_proj = %s %s", abc1_select_proj, abc2_select_proj)
 
     vu = unit(rot_axis)
     q = math.cos(alpha/2)
@@ -428,39 +352,39 @@ def rayplanex(normal, planepoint, ray, raypoint):
 
     # vector from ray point to planepoint (from meteorite or top of lighthouse to the dog)
     rppp = subtract(planepoint, raypoint)
-    logging.info(" rppp %s ", rppp)
+    logger.info(" rppp %s ", rppp)
 
 
     if length(rppp) < TOL:
-        logging.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
+        logger.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
         raypoint = add(raypoint, scale(ray, 1.0))
         rppp = subtract(planepoint, raypoint)
-        logging.info(" new raypoint %s ", raypoint)
+        logger.info(" new raypoint %s ", raypoint)
 
     if abs(dot(rppp, normal)) < TOL:
-        logging.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
+        logger.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
         raypoint = add(raypoint, scale(ray, 1.0))
         rppp = subtract(planepoint, raypoint)
-        logging.info(" new raypoint %s ", raypoint)
+        logger.info(" new raypoint %s ", raypoint)
 
 
     # project vrppp onto normal (vector from top to bottom of the lighthouse)
     rppp_proj_n = scale(normal, dot(rppp, normal))
-    logging.info(" rppp_proj_n %s ", rppp_proj_n)
+    logger.info(" rppp_proj_n %s ", rppp_proj_n)
 
     # cosine of angle between normal and ray (between lighthouse and meteorive velocity vector)
     cosi = dot(unit(rppp_proj_n), ray)
-    logging.info(" cosi %s ", cosi)
+    logger.info(" cosi %s ", cosi)
 
 
     if abs(cosi) < TOL:
-       logging.error(" Error: the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
+       logger.error(" Error: the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
        return None
                          
     # vector from raypoint to intersect (from meteorite to earth intersect)
     raypoint2intersect = scale(ray, length(rppp_proj_n)/cosi)
 
-    logging.info(" raypoint2intersect %s ", raypoint2intersect)
+    logger.info(" raypoint2intersect %s ", raypoint2intersect)
 
     intersect = add(raypoint, raypoint2intersect)
 
@@ -489,19 +413,19 @@ def dirsign(a, b):
 def vcheck(v, dim=3):
 
     if len(v) != dim:
-            logging.error(" Error: vcheck() was passed an argument %s that is not a %dD vector.", v, dim)
+            logger.error(" Error: vcheck() was passed an argument %s that is not a %dD vector.", v, dim)
             raise ValueError("vcheck() was passed an argument that is not a vector of requested dimension %d." % dim)
             
     for vec_item in v:
         # is instance of float or int?
         if not isinstance(vec_item, (float, int)):
-            logging.error(" Error: vcheck() was passed an argument %s that could not convert to a list of numbers.", v)
+            logger.error(" Error: vcheck() was passed an argument %s that could not convert to a list of numbers.", v)
             raise ValueError("vcheck() was passed an argument that could not convert to a list of numbers.")
 
     # check for zero length vector
     # do not use the lengths function (that would create a circular dependency)
     if v[0]**2 + v[1]**2 + v[2]**2 < TOL:
-        logging.info(" Warning: vcheck() was passed an argument %s that is a zero length vector.", v)
+        logger.info(" Warning: vcheck() was passed an argument %s that is a zero length vector.", v)
 
 
 #_______________________________________________________
@@ -527,7 +451,7 @@ def vecs2ypr(vx2, vy2):
 
 
     if min(length(vx2), length(vy2)) < TOL:
-        logging.error(" Error: vec2yawpitchroll() encountered a zero length input vector.")
+        logger.error(" Error: vec2yawpitchroll() encountered a zero length input vector.")
         return None
 
     # first project vx into xy plane, then calculate yaw and pitch
@@ -535,7 +459,7 @@ def vecs2ypr(vx2, vy2):
 
     # if the projected vector is tiny, the camera is pointing straight up or down
     if length(vx_proj_xy) < TOL:
-        logging.info(" Warning: vec2yawpitchroll() it seems the camera is pointing straight up or down.")
+        logger.info(" Warning: vec2yawpitchroll() it seems the camera is pointing straight up or down.")
         pitch = angle([1,0,0], vx2, [0,1,0])
         yaw   = angle([0,1,0], vy2, [0,0,1])
         roll  = 0.0
