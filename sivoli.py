@@ -21,7 +21,6 @@ import sys
 # rayplanex(normal, planepoint, ray, raypoint)
 #
 # 
-# argconv(caller_name, arglist, argtypes)
 #
 # to do maybe:
 # shortest connection between 2 lines in space
@@ -32,16 +31,21 @@ import sys
 # DEBUG level prints all levels
 # use INFO for normal runs
 #
-# logging.basicConfig( level=logging.DEBUG, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", filename='example.log', filemode='w' )
+# logging.basicConfig( level=logging.info, format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", filename='example.log', filemode='w' )
 logging.basicConfig( level=logging.INFO,  format="[%(filename)s:%(lineno)s - %(funcName)s() ] %(message)s", stream = sys.stdout )
+
+# global tolerance for floating point comparisons
+TOL = 1e-9
+
 
 #______________________________________________________
 # vector a plus vector b
 
 def add(a, b):
 
-    # make sure inputs are what this function expects
-    [a, b] = argconv("add", [a, b] , 2*["sv_vec3float"])
+    vcheck(a, 3)
+    vcheck(b, 3)
+
 
     return [x + y for x, y in zip(a, b)]
 
@@ -51,8 +55,8 @@ def add(a, b):
 
 def subtract(a, b):
 
-    # make sure inputs are what this function expects
-    [a, b] = argconv("subtract", [a, b] , 2*["sv_vec3float"])
+    vcheck(a, 3)
+    vcheck(b, 3)
 
     return [x - y for x, y in zip(a, b)]
 
@@ -61,8 +65,9 @@ def subtract(a, b):
 
 def cross(a, b):
 
-    # make sure inputs are what this function expects
-    [a, b] = argconv("cross", [a, b] , 2*["sv_vec3float"])
+    vcheck(a, 3)
+    vcheck(b, 3)
+
 
     c = [a[1]*b[2] - a[2]*b[1],
             a[2]*b[0] - a[0]*b[2],
@@ -75,18 +80,17 @@ def cross(a, b):
 
 def dot(a, b):
 
-    # make sure inputs are what this function expects
-    [a, b] = argconv("dot", [a, b] , 2*["sv_vec3float"])
+    vcheck(a, 3)
+
 
     return sum(x * y for x, y in zip(a, b))
 
 #______________________________________________________
-# scale vector a to size a
+# scale vector a by a factor scale
 
 def scale(a, scale):
 
-    # make sure inputs are what this function expects
-    [a, scale] = argconv("scale", [a, scale], ["sv_vec3float", "sv_float"]) 
+    vcheck(a, 3)
 
     return([x * scale for x in a])
 
@@ -95,8 +99,11 @@ def scale(a, scale):
 
 def tolength(a, size):
 
-    # make sure inputs are what this function expects
-    [a, size] = argconv("tolength", [a, size], ["sv_vec3float", "sv_float"]) 
+    vcheck(a, 3)
+
+    if length(a) < TOL:
+        logging.error(" Error: tolength() was passed argument %s that is a zero length vector.", a)
+        return None
 
     b = unit(a)
 
@@ -107,27 +114,27 @@ def tolength(a, size):
 
 def unit(a):
 
-    # make sure inputs are what this function expects
-    [a] = argconv("unit", [a], ["sv_vec3float"]) 
+    vcheck(a, 3)
 
     l = length(a)
 
+    if l < TOL:
+        logging.error(" Error: unit() was passed argument %s that is a zero length vector.", a)
+        return None
+
     b=[]
-    if l > 0:
-        for x in a:
-            b.append(x/l) 
-        return(b)     
-    else:
-        logging.error(" supplied with vector length zero, cannot divide. " )  
-        return()
+
+    for x in a:
+        b.append(x/l) 
+    return(b)     
+
 
 #______________________________________________________
 # return vector length
 
 def length(a):
 
-    # make sure inputs are what this function expects
-    [a] = argconv("length", [a], ["sv_vec3float"])    
+    vcheck(a, 3)
 
     sum_of_squares = 0
     for x in a:
@@ -142,9 +149,13 @@ def length(a):
 
 def rot(v, r, alpha):
 
-    # make sure inputs are what this function expects
-    [v, r, alpha] = argconv("rot", [v, r, alpha] , ["sv_vec3float","sv_vec3float","sv_float"])    
+    vcheck(v, 3)
+    vcheck(r, 3)
 
+    # check that v and r are not parallel, if so, give a warning
+    if length(cross(v, r)) < TOL:
+        logging.info(" Warning: rot() v and r are parallel, rotation will not change v. ")
+        return(v)
 
     # remove 2pi (360 degree) rotations from alpha
     sign = math.copysign(1, alpha)
@@ -164,7 +175,7 @@ def rot(v, r, alpha):
     radius_vec = subtract(v, rscaled)
 
 
-    # rotate by incremens beta
+    # rotate by increments beta
     beta = alpha / 4
     # this is to avoid alphas when tan(alpha) goes to infinity
 
@@ -186,18 +197,10 @@ def rot(v, r, alpha):
 #______________________________________________________
 # calculate angle between vecors a and b
 
-def angle(a,b, *args):
+def angle(a, b, *args):
 
-    # make sure inputs are what this function expects
-    [a,b] = argconv("angle", [a,b] , 2*["sv_vec3float"])
-    if args:
-        c = args[0]
-        [c] = argconv("angle", [c] , ["sv_vec3float"])
-
-
-    if length(a) == 0 or length(b) == 0:
-        logging.debug(" one of the vectors has zero length")
-        return(0.0) 
+    vcheck(a, 3)
+    vcheck(b, 3)
 
     a = unit(a)
     b = unit(b)
@@ -220,8 +223,8 @@ def angle(a,b, *args):
             sign = dirsign(c_pos, direction_vec)
             return(sign*angle)
         except:
-            logging.debug(" direction vector seems unusable.")
-            logging.debug(" calculated angle orientation may be wrong.")
+            logging.info(" direction vector seems unusable.")
+            logging.info(" calculated angle orientation may be wrong.")
 
     # need to add something here to indicate how the angle sign relates to cross(a, b)
 
@@ -231,10 +234,10 @@ def angle(a,b, *args):
 # convert orientation given by 2 perpendicular vectors to a quaternion
 # as quaternion and angle-axis lists
 
-def vecs2quat(a,b,c):
+def vecs2quat(a,b):
 
-    # make sure inputs are what this function expects
-    [a,b,c] = argconv("vecs2quat", [a,b,c] , 3*["sv_vec3float"])
+    vcheck(a, 3)
+    vcheck(b, 3)
 
     ux = [1,0,0]
     uy = [0,1,0]
@@ -245,19 +248,16 @@ def vecs2quat(a,b,c):
     a = unit(a)
     b = unit(b)
 
-    # check that a is perpendicular to b
-    perpend_check = math.degrees(math.acos(dot(a,b)))
-
 
     # make things perfectly rectangular by replacing the original b with a new b
     c = cross(a,b)
     b = cross(c,a)
 
-    logging.debug(" b = %s", b)
+    logging.info(" b = %s", b)
 
     abc = [a,b,c]
 
-    logging.debug(" abc = %s", abc)
+    logging.info(" abc = %s", abc)
 
     # from reference base vectors u* to rotated ones
     dx = subtract(a, ux)
@@ -266,13 +266,13 @@ def vecs2quat(a,b,c):
 
     d = [dx,dy,dz]
 
-    logging.debug(" d = %s", d)
+    logging.info(" d = %s", d)
 
     d_lengths = [length(dx),length(dy),length(dz)]
 
-    if max(d_lengths) < 1E-6:
+    if max(d_lengths) < TOL:
        logging.info(" Rotated system practically coincides with reference coordinate system. ") 
-       return([0,1,0.0])
+       return([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0])
     
     # find the shortest d
     d_min_value = min(d_lengths)
@@ -283,13 +283,13 @@ def vecs2quat(a,b,c):
 
     # let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
 
-    logging.debug(" after sorting abc = %s", abc)
-    logging.debug(" after sorting  d = %s", d)
-    logging.debug(" after sorting  u = %s", u)
+    logging.info(" after sorting abc = %s", abc)
+    logging.info(" after sorting  d = %s", d)
+    logging.info(" after sorting  u = %s", u)
 
     rot_axis = unit(cross(d[0], d[1]))
 
-    logging.debug(" after sorting rot_axis = %s", rot_axis)
+    logging.info(" after sorting rot_axis = %s", rot_axis)
 
     # select abc and u to calculate alpha
     abc_select = abc[0]
@@ -305,8 +305,8 @@ def vecs2quat(a,b,c):
     u_select_proj = unit(subtract(u_select, tmp))
     alpha = angle(u_select_proj, abc_select_proj, rot_axis)
 
-    logging.debug(" alpha = %s", alpha)
-    logging.debug(" abc_select_proj, u_select_proj = %s %s", abc_select_proj, u_select_proj)
+    logging.info(" alpha = %s", alpha)
+    logging.info(" abc_select_proj, u_select_proj = %s %s", abc_select_proj, u_select_proj)
 
     vu = unit(rot_axis)
     q = math.cos(alpha/2)
@@ -319,14 +319,16 @@ def vecs2quat(a,b,c):
 
 
 #______________________________________________________
-# mutual orientation of 2 systems, each defined by 3 orthogonal vectors
+# mutual orientation of 2 systems, each defined by 2 orthogonal vectors
 # returns transform from sys 1 to sys 2  
 # as quaternion and angle-axis lists
 
-def sys2sys2quat(a1, b1, c1, a2, b2, c2):
+def sys2sys2quat(a1, b1, a2, b2):
 
-    # make sure inputs are what this function expects
-    [a1, b1, c1, a2, b2, c2] = argconv("sys2sys2quat", [a1, b1, c1, a2, b2, c2] , 6*["sv_vec3float"])
+    vcheck(a1, 3)
+    vcheck(b1, 3)
+    vcheck(a2, 3)
+    vcheck(b2, 3)
 
     a1 = unit(a1)
     b1 = unit(b1)
@@ -334,7 +336,7 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
     c1 = cross(a1,b1)
     b1 = cross(c1,a1)
     abc1 = [a1,b1,c1]
-    logging.debug(" abc1 = %s", abc1)
+    logging.info(" abc1 = %s", abc1)
 
     a2 = unit(a2)
     b2 = unit(b2)
@@ -342,7 +344,7 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
     c2 = cross(a2,b2)
     b2 = cross(c2,a2)
     abc2 = [a2,b2,c2]
-    logging.debug(" abc2 = %s", abc2)
+    logging.info(" abc2 = %s", abc2)
 
 
 
@@ -353,13 +355,13 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
     d = [dx,dy,dz]
 
-    logging.debug(" d = %s", d)
+    logging.info(" d = %s", d)
 
     d_lengths = [length(dx),length(dy),length(dz)]
 
-    if max(d_lengths) < 1E-6:
+    if max(d_lengths) < TOL:
        logging.info(" Rotated system practically coincides with reference coordinate system. ") 
-       return([1,0,0.0], [0,1,0.0] )
+       return([1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0])
     
     # find the shortest d
     d_min_value = min(d_lengths)
@@ -370,14 +372,14 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
     # ... let's not use this one to calculate rotation axis, let's use the other 2, the larger ones
 
-    logging.debug(" after sorting abc1 = %s", abc1)
-    logging.debug(" after sorting abc2 = %s", abc2)
-    logging.debug(" after sorting    d = %s", d)
+    logging.info(" after sorting abc1 = %s", abc1)
+    logging.info(" after sorting abc2 = %s", abc2)
+    logging.info(" after sorting    d = %s", d)
 
 
     rot_axis = unit(cross(d[0], d[1]))
 
-    logging.debug(" after sorting rot_axis = %s", rot_axis)
+    logging.info(" after sorting rot_axis = %s", rot_axis)
 
     # select abc and u to calculate alpha
     abc1_select = abc1[0]
@@ -394,8 +396,8 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
     alpha = angle(abc1_select_proj, abc2_select_proj, rot_axis)
 
-    logging.debug(" alpha = %s", alpha)
-    logging.debug(" abc1_select_proj, abc2_select_proj = %s %s", abc1_select_proj, abc2_select_proj)
+    logging.info(" alpha = %s", alpha)
+    logging.info(" abc1_select_proj, abc2_select_proj = %s %s", abc1_select_proj, abc2_select_proj)
 
     vu = unit(rot_axis)
     q = math.cos(alpha/2)
@@ -410,14 +412,16 @@ def sys2sys2quat(a1, b1, c1, a2, b2, c2):
 
 def rayplanex(normal, planepoint, ray, raypoint):
 
+    vcheck(normal, 3)
+    vcheck(planepoint, 3)
+    vcheck(ray, 3)
+    vcheck(raypoint, 3)
+
     # imagine the raypoint is a meteorite passing by the top of a lighthouse
     # ray ... is meteorite velocity vector
     # plane ... is the ground
     # plane point ... is a dog nearby
     # intersect ... is where the meteorite hits the ground
-
-    # make sure inputs are what this function expects
-    [normal, planepoint, ray, raypoint] = argconv("rayplanex", [normal, planepoint, ray, raypoint] , 4*["sv_vec3float"])
 
     normal = unit(normal)
     ray = unit(ray)
@@ -425,6 +429,20 @@ def rayplanex(normal, planepoint, ray, raypoint):
     # vector from ray point to planepoint (from meteorite or top of lighthouse to the dog)
     rppp = subtract(planepoint, raypoint)
     logging.info(" rppp %s ", rppp)
+
+
+    if length(rppp) < TOL:
+        logging.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
+        raypoint = add(raypoint, scale(ray, 1.0))
+        rppp = subtract(planepoint, raypoint)
+        logging.info(" new raypoint %s ", raypoint)
+
+    if abs(dot(rppp, normal)) < TOL:
+        logging.info(" the raypoint is (almost or completely) on the plane, try a new raypoint. ")  
+        raypoint = add(raypoint, scale(ray, 1.0))
+        rppp = subtract(planepoint, raypoint)
+        logging.info(" new raypoint %s ", raypoint)
+
 
     # project vrppp onto normal (vector from top to bottom of the lighthouse)
     rppp_proj_n = scale(normal, dot(rppp, normal))
@@ -435,9 +453,9 @@ def rayplanex(normal, planepoint, ray, raypoint):
     logging.info(" cosi %s ", cosi)
 
 
-    if abs(cosi) < 1e-16:
-       logging.info(" the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
-       exit
+    if abs(cosi) < TOL:
+       logging.error(" Error: the ray is (almost or completely) parallel to plane, cannot calculate intersect. ")  
+       return None
                          
     # vector from raypoint to intersect (from meteorite to earth intersect)
     raypoint2intersect = scale(ray, length(rppp_proj_n)/cosi)
@@ -454,8 +472,8 @@ def rayplanex(normal, planepoint, ray, raypoint):
 
 def dirsign(a, b):
 
-    # make sure inputs are what this function expects
-    [a,b] = argconv("dirsign", [a,b] , 2*["sv_vec3float"])
+    vcheck(a, 3)
+    vcheck(b, 3)
 
     cosi = dot(a, b)
     
@@ -465,66 +483,71 @@ def dirsign(a, b):
         return(1)
 
 
-#____________________________________________________________________  
-# 
-# argconv tries to convert function arguments to what the caller function expects.
-#
-# These argument types are defined:
-#    sv_string
-#    sv_int
-#    sv_float
-#    sv_vec3float ... 3 dimensional vector
-#
-# Example call: [a,b,c] = argconv("test_caller", [a, b, c], ["sv_string", "sv_vec3float", "sv_int"])
+#_______________________________________________________
+# vcheck if supplier vectors are healthy and non zero length
 
-def argconv(caller_name, arglist, argtypes):
+def vcheck(v, dim=3):
 
-    if len(arglist) != len(argtypes):
-       logging.debug(" Error: ARG conversion by function %s(): len(arglist) not equatl to len(argtypes) ", caller_name)
+    if len(v) != dim:
+            logging.error(" Error: vcheck() was passed an argument %s that is not a %dD vector.", v, dim)
+            raise ValueError("vcheck() was passed an argument that is not a vector of requested dimension %d." % dim)
+            
+    for vec_item in v:
+        # is instance of float or int?
+        if not isinstance(vec_item, (float, int)):
+            logging.error(" Error: vcheck() was passed an argument %s that could not convert to a list of numbers.", v)
+            raise ValueError("vcheck() was passed an argument that could not convert to a list of numbers.")
 
-
-    for arg_i in range(0, len(arglist)):
-
-        if argtypes[arg_i] == "sv_float":
-            try:
-                arglist[arg_i] = float(arglist[arg_i])
-            except:
-                logging.debug(" Error: Function %s was passed an argument %s that could not convert to float.", caller_name, arglist[arg_i])
-                sys.exit()
-
-        if argtypes[arg_i] == "sv_int":
-            try:
-                arglist[arg_i] = int(arglist[arg_i])
-            except:
-                logging.debug(" Error: Function %s was passed an argument %s that could not convert to int.", caller_name, arglist[arg_i])
-                sys.exit()
-
-        if argtypes[arg_i] == "sv_string":
-            try:
-                for vec_item in arglist[arg_i]:
-                   vec_item = str(vec_item)
-            except:
-                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a string.", caller_name, arglist[arg_i])
-                sys.exit()
-
-        if argtypes[arg_i] == "sv_vec3float":
-            try:
-                for vec_item in arglist[arg_i]:
-                    vec_item = float(vec_item)
-            except:
-                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a list of floats.", caller_name, arglist[arg_i])
-                sys.exit()
-            if len(arglist[arg_i]) != 3:
-                logging.debug(" Error: Function %s was passed an argument %s that could not convert to a list of 3 floats.", caller_name, arglist[arg_i])
-                sys.exit()
+    # check for zero length vector
+    # do not use the lengths function (that would create a circular dependency)
+    if v[0]**2 + v[1]**2 + v[2]**2 < TOL:
+        logging.info(" Warning: vcheck() was passed an argument %s that is a zero length vector.", v)
 
 
-    return(arglist)
+#_______________________________________________________
+# vec2yawpitchroll
+
+def vecs2ypr(vx2, vy2):
+
+    # think of it as a tank turret with a gun barrel and a bullet. 
+    # The turret yaws, the barrel pitches, and the bullet rolls.
+    # 
+    # vz0 is attached to the bullet, aims up before any rotation
+    # vy0 is attached to the bullet, aims left before any rotation
+    # vx0 is attached to the bullet, aims forward before any rotation
+    #
+    # yaw is rotation around initial vz (vz0 = [0,0,1])
+    # pitch is rotation around new vy (vy1)
+    # roll is rotation around new vx (vx2)
+    #
+    # 
+
+    vcheck(vx2, 3)
+    vcheck(vy2, 3)
 
 
+    if min(length(vx2), length(vy2)) < TOL:
+        logging.error(" Error: vec2yawpitchroll() encountered a zero length input vector.")
+        return None
 
+    # first project vx into xy plane, then calculate yaw and pitch
+    vx_proj_xy = [vx2[0], vx2[1], 0.0]
 
-       
+    # if the projected vector is tiny, the camera is pointing straight up or down
+    if length(vx_proj_xy) < TOL:
+        logging.info(" Warning: vec2yawpitchroll() it seems the camera is pointing straight up or down.")
+        pitch = angle([1,0,0], vx2, [0,1,0])
+        yaw   = angle([0,1,0], vy2, [0,0,1])
+        roll  = 0.0
+        return([yaw, pitch, roll])
+
+    yaw = angle([1,0,0], vx_proj_xy, [0,0,1])
+    vy1 = rot([0,1,0], [0,0,1], yaw)
+    pitch = angle(vx_proj_xy, vx2, vy1)
+    roll = angle(vy1, vy2, vx2)  
+
+    return([yaw, pitch, roll])
+
 
 
 
